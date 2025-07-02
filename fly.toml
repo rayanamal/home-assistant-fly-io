@@ -1,0 +1,51 @@
+# Set the name for your app. Your app will be deployed to <app-name>.fly.dev.build.args = { 
+# As the name 'home-assistant' has already been taken, you need to choose another 
+# name or it will be randomized, like "home-assistang-sweaty-shark-1234.fly.dev".
+
+app = 'home-assistant'
+
+[deploy]
+  # If you want to check Home Assistant's configuration for errors before starting it, uncomment the following line.max_unavailable = 
+  # Do not uncomment it when first launching the app, as there's no valid configuration at first start.
+  # release_command = 'python -m homeassistant --script check_config --config /config'  
+  
+[env]
+  # Set to your own timezone.
+  TZ = 'Europe/London'
+
+[[vm]]
+  # You can increase the VM size if it isn't sufficient for your setup. https://fly.io/docs/reference/configuration/#size
+  size = 'shared-cpu-1x'
+  memory = '1gb'
+  
+[[services]]
+  # Uncomment the following line if you want Home Assisstant to be stopped when idle, instead of being always run.
+  # auto_stop_machines = 'stop'
+  
+  auto_start_machines = true
+  protocol = 'tcp'
+  internal_port = 8123
+
+  [[services.ports]]
+    port = 80
+    handlers = ['http']
+
+  [[services.ports]]
+    port = 443
+    handlers = ['tls', 'http']
+
+  [[services.tcp_checks]]
+    interval = '15s'
+    timeout = '2s'
+    grace_period = '1m'
+    
+[experimental]
+  cmd = ['--config', '/config']
+  entrypoint = ['python', '-m', 'homeassistant']  
+
+[[mounts]]
+  source = 'homeassistant_data'
+  destination = '/config'
+  
+[build]
+  image = 'ghcr.io/home-assistant/home-assistant:stable'
